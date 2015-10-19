@@ -3,15 +3,16 @@
     var move = 0;
     var winflag = false;
     var symbols = ["&times;", "o"];
-    var scores = [0, 0, 0]; // [player1, player2, tie]
-    var player1 = 0; // player 1 is "X", player 1 always moves first
-    var player2 = 1; // player 2 is "O"
-    var tie = 2;
-    var mySeed = 0; // used in minimax to identify my move
-    var oppSeed = 1; // used in minimax to identify the opponent move
+    var scores = [0, 0, 0]; // [tie, player1, player2]
+    var tie = 0;
+    var player1 = 1; // player 1 is "X", player 1 always moves first
+    var player2 = 2; // player 2 is "O"
+    var mySeed = 1; // used in minimax to identify my move
+    var oppSeed = 2; // used in minimax to identify the opponent move
     var SIZE = 9;
     var singleMode = false;
     var comp = player2; // decide which player is the AI
+    var counter = 0; // performance counter, for analyze the algorithm
 
     // all combination to win the game
     var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
@@ -21,10 +22,10 @@
     /* 0 1 2 
        3 4 5
        6 7 8 */
-    /* the states of the game board, null means the slot is empty,
-       0 means player 1 has chose the slot and 1 means player 2 has
-       chose the slot */
-    var states = [null, null, null, null, null, null, null, null, null];
+    /* the states of the game board, 0 means the slot is empty,
+       1 means player 1 has chose the slot and 2 means player 2 
+       has chose the slot */
+    var states = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     /* map the index to the html div id */
     var blocks = ["#top-left", "#top", "#top-right", "#middle-left", "#middle",
@@ -39,7 +40,7 @@
 	    winflag = false;
 	}
 
-	if (states[event.data.index] !== null) {
+	if (states[event.data.index] !== 0) {
 	    return; // this block has been clicked
 	}
 
@@ -76,21 +77,18 @@
     // update the score board
     var updateScore = function()
     {
-	$("#player1-score").html("PLAYER1 (&times;)<br>" + scores[0]);
-	$("#player2-score").html("PLAYER2 (o)<br>" + scores[1]);
-	$("#tie").html("TIES<br>" + scores[2]);
+	$("#player1-score").html("PLAYER1 (&times;)<br>" + scores[1]);
+	$("#player2-score").html("PLAYER2 (o)<br>" + scores[2]);
+	$("#tie").html("TIES<br>" + scores[0]);
     };
 
     // the player make a move
     var playerMove = function (index)
     {
-	var symbol;
-	var player = move % 2;
-	
+	var player = move % 2 + 1;
 	states[index] = player;
-	// console.log(states);
+	draw(index, symbols[player - 1]);
 	move++;
-	draw(index, symbols[player]);
     };
 
     // draw symbol on the block[index]
@@ -102,9 +100,9 @@
     // check if blocks i, j, k are drawed by the same player
     var checkHelper = function(winCom)
     {
-	if (states[winCom[0]] === null ||
-	    states[winCom[1]] === null ||
-	    states[winCom[2]] === null) {
+	if (states[winCom[0]] === 0 ||
+	    states[winCom[1]] === 0 ||
+	    states[winCom[2]] === 0) {
 	    return false;
 	}
 	return states[winCom[0]] === states[winCom[1]] &&
@@ -157,7 +155,7 @@
 	    return moves;
 	}
 	for (var i = 0; i < SIZE; i++) {
-	    if (states[i] === null) {
+	    if (states[i] === 0) {
 		moves.push(i);
 	    }
 	}
@@ -194,6 +192,7 @@
     // the MiniMax algorithm
     var minimax = function(playerSeed)
     {
+	counter++;
 	var bestScore = (playerSeed === mySeed) ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
 	    currentScore = 0,
 	    availableMoves = getAvailableMoves(),
@@ -211,7 +210,7 @@
 		move++;
 		if (playerSeed === mySeed) { // my seed, get the highest score move
 		    if (bestScore === 10) {
-			states[availableMove] = null; // undo move
+			states[availableMove] = 0; // undo move
 			move--;
 			break; // break if a winning move found
 		    }
@@ -223,7 +222,7 @@
 		    }
 		} else { // opponent seed, get the lowest score move
 		    if (bestScore === -10) {
-			states[availableMove] = null; // undo move
+			states[availableMove] = 0; // undo move
 			move--;
 			break; // break if a losing move found
 		    }
@@ -233,7 +232,7 @@
 			returnMove = availableMove;
 		    }
 		}
-		states[availableMove] = null; // undo move
+		states[availableMove] = 0; // undo move
 		move--;
 	    }
 	}
@@ -242,9 +241,20 @@
     };
 
     var computerMove = function(player) {
-	var nextmove = minimax(player).move;
+	counter = 0;
+	var nextmove;
+	if (move === 0) {
+	    /* to optimize the running time performance, the AI will
+	       always chose the 0 slot to be the first move of the game.
+	       this reduces the posible moves we need to check dramatically.
+	    */
+	    nextmove = 0;
+	} else {
+	    nextmove = minimax(player).move;
+	}
+	console.log(counter);
 	states[nextmove] = player;
-	draw(nextmove, symbols[player]);
+	draw(nextmove, symbols[player - 1]);
 	move++;
     };
 
@@ -264,7 +274,7 @@
 	move = 0;
 
 	for (var i = 0; i < SIZE; i++) {
-	    states[i] = null;
+	    states[i] = 0;
 	    $(blocks[i]).html("");
 	    $(blocks[i]).css("fontSize", "90px");
 	}

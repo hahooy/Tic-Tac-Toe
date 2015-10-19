@@ -88,7 +88,7 @@
 	var player = move % 2;
 	
 	states[index] = player;
-	console.log(states);
+	// console.log(states);
 	move++;
 	draw(index, symbols[player]);
     };

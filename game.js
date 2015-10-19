@@ -37,6 +37,9 @@
 	    restart();
 	    winflag = false;
 	}
+	if (states[event.data.index] !== null) {
+	    return; // this block has been clicked
+	}
 	playerMove(event.data.index);
 	if (isOver()) {
 	    winflag = true;
@@ -70,11 +73,8 @@
     };
 
     // the player make a move
-    var playerMove = function (index) {
-	if (states[index] !== null) {
-	    return; // this block has been clicked
-	}
-
+    var playerMove = function (index)
+    {
 	var symbol;
 	var player = move % 2;
 	

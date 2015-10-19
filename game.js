@@ -1,7 +1,14 @@
 (function name() {
-    var move;
-    var winflag;
-    var scores;
+    var move = 0;
+    var winflag = false;
+    var scores = [0, 0, 0]; // [player1, player2, tie]
+    var player1 = 0;
+    var player2 = 1;
+    var tie = 2;
+
+    // all combination to win the game
+    var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
+		  [2,5,8], [0,4,8], [6,4,2]];
 
     /* block files: "id", "drawed", "player" */
     /* 0 1 2 
@@ -44,18 +51,7 @@
 	    winflag = false;
 	}
 	draw.call(this, event.data.index);
-	var ret = checkWin();
-	if (ret !== null) {
-	    winflag = true;
-	    playAnimation(ret.indx);
-	    scores[ret.player]++;	 
-	    updateScore();
-	} else if (move === blocks.length) {
-	    winflag = true;
-	    playAnimation([0,1,2,3,4,5,6,7,8]);
-	    scores[2]++;
-	    updateScore();
-	}
+	isOver();
     };
 
     // show animation when game is over
@@ -101,77 +97,50 @@
 
     var checkWin = function()
     {
-	if (move >= 4) {	
-	    if (checkHelper(0, 1, 2)) {
-		// top horizontal
+	for (var i = 0, len = winComs.length; i < len; i++) {
+	    if (checkHelper(winComs[i])) {
 		return {
-		    "indx": [0, 1, 2],
-		    "player": blocks[0].player
-		};
-	    }
-	    if (checkHelper(3, 4, 5)) {
-		// middle horizontal
-		return {
-		    "indx": [3, 4, 5],
-		    "player": blocks[3].player
-		};
-	    }
-	    if (checkHelper(6, 7, 8)) {
-		// bottom horizontal
-		return {
-		    "indx": [6, 7, 8],
-		    "player": blocks[6].player
-		};
-	    }
-	    if (checkHelper(0, 3, 6)) {
-		// left vertical
-		return {
-		    "indx": [0, 3, 6],
-		    "player": blocks[0].player
-		};
-	    }
-	    if (checkHelper(1, 4, 7)) {
-		// middle vertical
-		return {
-		    "indx": [1, 4, 7],
-		    "player": blocks[1].player
-		};
-	    }
-	    if (checkHelper(2, 5, 8)) {
-		// right vertical
-		return {
-		    "indx": [2, 5, 8],
-		    "player": blocks[2].player
-		};
-	    }
-	    if (checkHelper(0, 4, 8)) {
-		// left diagnal
-		return {
-		    "indx": [0, 4, 8],
-		    "player": blocks[0].player
-		};
-	    }
-	    if (checkHelper(6, 4, 2)) {
-		// right diagnal
-		return {
-		    "indx": [6, 4, 2],
-		    "player": blocks[6].player
+		    "indx": winComs[i],
+		    "player": blocks[winComs[i][0]].player
 		};
 	    }
 	}
 	return null;
     };
 
-    // check if blocks i, j, k are drawed by the same player
-    var checkHelper = function(i, j, k)
+    // is game over?
+    var isOver = function()
     {
-	if (blocks[i].player === null ||
-	    blocks[j].player === null ||
-	    blocks[k].player === null) {
+	var ret = checkWin();
+	// ret.player has won the game
+	if (ret !== null) {
+	    winflag = true;
+	    playAnimation(ret.indx);
+	    scores[ret.player]++;	 
+	    updateScore();
+	    return true;
+	}
+	// tie
+	if (move === blocks.length) {
+	    winflag = true;
+	    playAnimation([0,1,2,3,4,5,6,7,8]);
+	    scores[tie]++;
+	    updateScore();
+	    return true;
+	}
+	return false;
+    };	
+
+    // check if blocks i, j, k are drawed by the same player
+    var checkHelper = function(winCom)
+    {
+	if (blocks[winCom[0]].player === null ||
+	    blocks[winCom[1]].player === null ||
+	    blocks[winCom[2]].player === null) {
 	    return false;
 	}
-	return blocks[i].player === blocks[j].player &&
-	    blocks[j].player === blocks[k].player;
+	return blocks[winCom[0]].player === blocks[winCom[1]].player &&
+	    blocks[winCom[1]].player === blocks[winCom[2]].player;
     };
 
     // restart the game, set all properties to default value
@@ -190,10 +159,6 @@
     // initialize the game board
     var init = function()
     {
-	move = 0;
-	winflag = false;
-	scores = [0, 0, 0]; // [player1, player2, tie]
-
 	updateScore();
 
 	for (var i = 0; i < blocks.length; i++) {

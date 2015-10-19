@@ -1,47 +1,30 @@
-(function name() {
+(function game() {
     var move = 0;
     var winflag = false;
     var scores = [0, 0, 0]; // [player1, player2, tie]
     var player1 = 0;
     var player2 = 1;
     var tie = 2;
+    var mySeed = 0; // used in minimax to identify my move
+    var oppSeed = 1; // used in minimax to identify the opponent move
+    const SIZE = 9;
 
     // all combination to win the game
     var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
-		  [2,5,8], [0,4,8], [6,4,2]];
+		   [2,5,8], [0,4,8], [6,4,2]];
 
-    /* block files: "id", "drawed", "player" */
+    // block representation
     /* 0 1 2 
        3 4 5
        6 7 8 */
-    var blocks = [
-	{
-	    "id": "#top-left"
-	},
-	{
-	    "id": "#top"
-	},
-	{
-	    "id": "#top-right"
-	},
-	{
-	    "id": "#middle-left"
-	},
-	{
-	    "id": "#middle"
-	},
-	{
-	    "id": "#middle-right"
-	},
-	{
-	    "id": "#bottom-left"
-	},
-	{
-	    "id": "#bottom"
-	},
-	{
-	    "id": "#bottom-right"
-	}];
+    /* the states of the game board, null means the slot is empty,
+       0 means player 1 has chose the slot and 1 means player 2 has
+       chose the slot */
+    var states = [null, null, null, null, null, null, null, null, null];
+
+    /* map the index to the html div id */
+    var blocks = ["#top-left", "#top", "#top-right", "#middle-left", "#middle",
+		  "#middle-right", "#bottom-left", "#bottom", "#bottom-right"];
 
     // block listener
     var handler = function(event)
@@ -50,19 +33,19 @@
 	    restart();
 	    winflag = false;
 	}
-	draw.call(this, event.data.index);
+	playerMove(event.data.index);
 	isOver();
     };
 
     // show animation when game is over
     var playAnimation = function(array) {
 	var i = 0;
-	$(blocks[array[i]].id).animate(
+	$(blocks[array[i]]).animate(
 	    {"fontSize": "110px"},
 	    "fast",
 	    function playnext () {
-		if (i >= array.length - 1) return;
-		$(blocks[array[++i]].id).animate({"fontSize": "110px"}, "fast", playnext);
+	    	if (i >= array.length - 1) return;
+	    	$(blocks[array[++i]]).animate({"fontSize": "110px"}, "fast", playnext);
 	    });
     };
 
@@ -74,10 +57,9 @@
 	$("#tie").html("TIES<br>" + scores[2]);
     };
 
-    // draw the block when clicked
-    var draw = function(index)
-    {
-	if (blocks[index].drawed) {
+    // the player make a move
+    var playerMove = function (index) {
+	if (states[index] !== null) {
 	    return; // this block has been clicked
 	}
 
@@ -89,20 +71,41 @@
 	    symbol = "o";
 	}
 	
-	blocks[index].drawed = true;
-	blocks[index].player = player;
+	states[index] = player;
+	console.log(states);
 	move++;
-	$(this).html(symbol);
+	draw(index, symbol);
     };
 
+    // draw symbol on the block[index]
+    var draw = function(index, symbol)
+    {
+	$(blocks[index]).html(symbol);
+    };
+
+    // check if blocks i, j, k are drawed by the same player
+    var checkHelper = function(winCom)
+    {
+	if (states[winCom[0]] === null ||
+	    states[winCom[1]] === null ||
+	    states[winCom[2]] === null) {
+	    return false;
+	}
+	return states[winCom[0]] === states[winCom[1]] &&
+	    states[winCom[1]] === states[winCom[2]];
+    };
+
+    // check if we have a winer
     var checkWin = function()
     {
-	for (var i = 0, len = winComs.length; i < len; i++) {
-	    if (checkHelper(winComs[i])) {
-		return {
-		    "indx": winComs[i],
-		    "player": blocks[winComs[i][0]].player
-		};
+	if (move >= 4) {
+	    for (var i = 0, len = winComs.length; i < len; i++) {
+	    	if (checkHelper(winComs[i])) {
+	    	    return {
+	    		"indx": winComs[i],
+	    		"player": states[winComs[i][0]]
+	    	    };
+	    	}
 	    }
 	}
 	return null;
@@ -121,7 +124,7 @@
 	    return true;
 	}
 	// tie
-	if (move === blocks.length) {
+	if (move === SIZE) {
 	    winflag = true;
 	    playAnimation([0,1,2,3,4,5,6,7,8]);
 	    scores[tie]++;
@@ -131,28 +134,49 @@
 	return false;
     };	
 
-    // check if blocks i, j, k are drawed by the same player
-    var checkHelper = function(winCom)
+    /* Start Game AI */
+    // get all the available slots on the game board
+    var getAvailableMoves = function()
     {
-	if (blocks[winCom[0]].player === null ||
-	    blocks[winCom[1]].player === null ||
-	    blocks[winCom[2]].player === null) {
-	    return false;
+	var moves = [];
+	for (var i = 0; i < SIZE; i++) {
+	    if (states[i] === null) {
+		moves.push(i);
+	    }
 	}
-	return blocks[winCom[0]].player === blocks[winCom[1]].player &&
-	    blocks[winCom[1]].player === blocks[winCom[2]].player;
+	return moves;
     };
+
+    // the states of the game board after making a move
+    var getNextStates = function(index, player)
+    {
+	var nextStates = new Array(SIZE);
+	// copy the current states
+	for (var i = 0; i < SIZE; i++) {
+	    nextStates[i] = states[i];
+	}
+	nextStates[index] = player;
+	return nextStates;
+    };
+
+    
+
+    /* make the functions to be global for testing */
+    window.getNextStates = getNextStates;
+    window.getAvailableMoves = getAvailableMoves;
+
+    /* End Game AI */
+
 
     // restart the game, set all properties to default value
     var restart = function()
     {
 	move = 0;
 
-	for (var i = 0; i < blocks.length; i++) {
-	    blocks[i].drawed = false;
-	    blocks[i].player = null;
-	    $(blocks[i].id).html("");
-	    $(blocks[i].id).css("fontSize", "90px");
+	for (var i = 0; i < SIZE; i++) {
+	    states[i] = null;
+	    $(blocks[i]).html("");
+	    $(blocks[i]).css("fontSize", "90px");
 	}
     };
 
@@ -160,11 +184,8 @@
     var init = function()
     {
 	updateScore();
-
 	for (var i = 0; i < blocks.length; i++) {
-	    blocks[i].drawed = false;
-	    blocks[i].player = null;
-	    $(blocks[i].id).on("click", {"index": i}, handler);
+	    $(blocks[i]).on("click", {"index": i}, handler);
 	}
     };
 

@@ -4,7 +4,6 @@ body {
 
 #game-container {
     margin: 100px auto;
-    background-color: black;
     width: 450px;
 }
 
@@ -14,7 +13,8 @@ body {
 }
 
 #game-board > div {
-    border: 2px solid white;
+    border: 3px solid white;
+    background-color: black;
     color: #fff;
     font-size: 90px;
     text-align: center;

@@ -1,13 +1,17 @@
+"use strict";
 (function game() {
     var move = 0;
     var winflag = false;
+    var symbols = ["&times;", "o"];
     var scores = [0, 0, 0]; // [player1, player2, tie]
-    var player1 = 0;
-    var player2 = 1;
+    var player1 = 0; // player 1 is "X", player 1 always moves first
+    var player2 = 1; // player 2 is "O"
     var tie = 2;
     var mySeed = 0; // used in minimax to identify my move
     var oppSeed = 1; // used in minimax to identify the opponent move
-    const SIZE = 9;
+    var SIZE = 9;
+    var singleMode = false;
+    var comp = player2;
 
     // all combination to win the game
     var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
@@ -34,7 +38,15 @@
 	    winflag = false;
 	}
 	playerMove(event.data.index);
-	isOver();
+	if (isOver()) {
+	    winflag = true;
+	}
+	if (singleMode) {
+	    computerMove();
+	    if (isOver()) {
+		winflag = true;
+	    }
+	}
     };
 
     // show animation when game is over
@@ -65,16 +77,11 @@
 
 	var symbol;
 	var player = move % 2;
-	if (player === 0) {
-	    symbol = "&times;";
-	} else {
-	    symbol = "o";
-	}
 	
 	states[index] = player;
 	console.log(states);
 	move++;
-	draw(index, symbol);
+	draw(index, symbols[player]);
     };
 
     // draw symbol on the block[index]
@@ -100,7 +107,7 @@
     {
 	if (move >= 4) {
 	    for (var i = 0, len = winComs.length; i < len; i++) {
-	    	if (checkHelper(winComs[i])) {
+	    	if (checkHelper(winComs[i], states)) {
 	    	    return {
 	    		"indx": winComs[i],
 	    		"player": states[winComs[i][0]]
@@ -111,13 +118,12 @@
 	return null;
     };
 
-    // is game over?
+    // is game over? This function has side effects!!!
     var isOver = function()
     {
-	var ret = checkWin();
+	var ret = checkWin(states);
 	// ret.player has won the game
 	if (ret !== null) {
-	    winflag = true;
 	    playAnimation(ret.indx);
 	    scores[ret.player]++;	 
 	    updateScore();
@@ -125,7 +131,6 @@
 	}
 	// tie
 	if (move === SIZE) {
-	    winflag = true;
 	    playAnimation([0,1,2,3,4,5,6,7,8]);
 	    scores[tie]++;
 	    updateScore();
@@ -139,6 +144,9 @@
     var getAvailableMoves = function()
     {
 	var moves = [];
+	if (checkWin() !== null || move === SIZE) {
+	    return moves;
+	}
 	for (var i = 0; i < SIZE; i++) {
 	    if (states[i] === null) {
 		moves.push(i);
@@ -159,12 +167,85 @@
 	return nextStates;
     };
 
-    
+    // get the score for current move
+    var getScore = function()
+    {
+	var winer = checkWin();
+	if (winer !== null) {
+	    if (winer.player === mySeed) {
+		return 10;
+	    } else {
+		return -10;
+	    }
+	} else {
+	    return 0;
+	}
+    };
+
+    // the MiniMax algorithm
+    var minimax = function(playerSeed)
+    {
+	var bestScore = (playerSeed === mySeed) ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
+	    currentScore = 0,
+	    availableMoves = getAvailableMoves(),
+	    returnMove = -1;
+	
+	if (availableMoves.length === 0) {
+	    /* game is over, return the score
+	       this is base case for BFS */
+	    bestScore = getScore(); 
+	} else {
+	    for (var i = 0, len = availableMoves.length; i < len; i++) {
+		var availableMove = availableMoves[i];
+		// try this move for current player
+		states[availableMove] = playerSeed;
+		move++;
+		if (playerSeed === mySeed) { // my seed, get the highest score move
+		    if (bestScore === 10) {
+			states[availableMove] = null; // undo move
+			move--;
+			break; // break if a winning move found
+		    }
+		    currentScore = minimax(oppSeed).score;
+		    
+		    if (bestScore < currentScore) {
+			bestScore = currentScore;
+			returnMove = availableMove;
+		    }
+		} else { // opponent seed, get the lowest score move
+		    if (bestScore === -10) {
+			states[availableMove] = null; // undo move
+			move--;
+			break; // break if a losing move found
+		    }
+		    currentScore = minimax(mySeed).score;
+		    if (bestScore > currentScore) {
+			bestScore = currentScore;
+			returnMove = availableMove;
+		    }
+		}
+		states[availableMove] = null; // undo move
+		move--;
+	    }
+	}
+	return {"score": bestScore, "move": returnMove};
+	/* TODO */
+    };
+
+    var computerMove = function() {
+	var nextmove = minimax(comp).move;
+	states[nextmove] = comp;
+	draw(nextmove, symbols[comp]);
+	move++;
+    };
 
     /* make the functions to be global for testing */
     window.getNextStates = getNextStates;
     window.getAvailableMoves = getAvailableMoves;
-
+    window.getScore = getScore;
+    window.minimax = minimax;
+    window.states = states;
+    window.computerMove = computerMove;
     /* End Game AI */
 
 
@@ -183,10 +264,15 @@
     // initialize the game board
     var init = function()
     {
-	updateScore();
+	updateScore(); // initialize the score board
+	// register the even listener for every slots of the board
 	for (var i = 0; i < blocks.length; i++) {
 	    $(blocks[i]).on("click", {"index": i}, handler);
 	}
+	// even listners for the modal button
+	$("#one-player").on("click", function() {
+	    singleMode = true;	    
+	});
     };
 
     init();

@@ -11,7 +11,7 @@
     var oppSeed = 1; // used in minimax to identify the opponent move
     var SIZE = 9;
     var singleMode = false;
-    var comp = player2;
+    var comp = player2; // decide which player is the AI
 
     // all combination to win the game
     var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
@@ -33,19 +33,27 @@
     // block listener
     var handler = function(event)
     {
+
 	if (winflag) {
 	    restart();
 	    winflag = false;
 	}
+
 	if (states[event.data.index] !== null) {
 	    return; // this block has been clicked
 	}
-	playerMove(event.data.index);
-	if (isOver()) {
-	    winflag = true;
+
+	// player move, if the first move is AI, skip this
+	if (!singleMode || move !== 0 || comp !== player1) {
+	    playerMove(event.data.index);
+	    if (isOver()) {
+		winflag = true;
+	    }
 	}
+
+	// AI only moves in single mode
 	if (singleMode) {
-	    computerMove();
+	    computerMove(comp);
 	    if (isOver()) {
 		winflag = true;
 	    }
@@ -53,7 +61,8 @@
     };
 
     // show animation when game is over
-    var playAnimation = function(array) {
+    var playAnimation = function(array)
+    {
 	var i = 0;
 	$(blocks[array[i]]).animate(
 	    {"fontSize": "110px"},
@@ -67,8 +76,8 @@
     // update the score board
     var updateScore = function()
     {
-	$("#player1-score").html("PLAYER1<br>" + scores[0]);
-	$("#player2-score").html("PLAYER2<br>" + scores[1]);
+	$("#player1-score").html("PLAYER1 (&times;)<br>" + scores[0]);
+	$("#player2-score").html("PLAYER2 (o)<br>" + scores[1]);
 	$("#tie").html("TIES<br>" + scores[2]);
     };
 
@@ -232,10 +241,10 @@
 	/* TODO */
     };
 
-    var computerMove = function() {
-	var nextmove = minimax(comp).move;
-	states[nextmove] = comp;
-	draw(nextmove, symbols[comp]);
+    var computerMove = function(player) {
+	var nextmove = minimax(player).move;
+	states[nextmove] = player;
+	draw(nextmove, symbols[player]);
 	move++;
     };
 
@@ -264,14 +273,24 @@
     // initialize the game board
     var init = function()
     {
-	updateScore(); // initialize the score board
+	// initialize the score board
+	updateScore(); 
+
 	// register the even listener for every slots of the board
 	for (var i = 0; i < blocks.length; i++) {
 	    $(blocks[i]).on("click", {"index": i}, handler);
 	}
-	// even listners for the modal button
+
+	// even listners for modal buttons
 	$("#one-player").on("click", function() {
-	    singleMode = true;	    
+	    singleMode = true;
+	    $(this).parent().toggleClass("hide");
+	    $("#turn-option").toggleClass("hide");
+	});
+	$("#play-second").on("click", function() {
+	    /* set AI to be player 1, AI plays first */
+	    comp = player1;
+	    computerMove(comp);
 	});
     };
 

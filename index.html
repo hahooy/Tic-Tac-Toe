@@ -19,8 +19,17 @@
 	    <p>Play the simple game of X's and O's</p>
 	  </div>
 	  <div class="modal-footer">
-	    <button type="button" id="one-player" class="btn btn-default" data-dismiss="modal">One Player</button>
-	    <button type="button" id="two-player" class="btn btn-default" data-dismiss="modal">Two Players</button>
+	    <div id="player-option">
+	      <button type="button" id="one-player" class="btn btn-default">One Player</button>
+	      <button type="button" id="two-player" class="btn btn-default" data-dismiss="modal">Two Players</button>
+	    </div>
+	    <!-- this block will display only when play against computer -->
+	    <div id="turn-option" class="hide">
+	      <p class="lead">Would you like to play first?</p>
+	      <button type="button" id="play-first" class="btn btn-default" data-dismiss="modal">Yes</button>
+	      <button type="button" id="play-second" class="btn btn-default" data-dismiss="modal">No</button>
+	    </div>
+	    <!-- end optional buttons -->
 	  </div>
 	</div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->

@@ -26,11 +26,15 @@ body {
 #game-footer {
     height: 50px;
     background-color: rgb(255,255,255);
-    font-size: 30px;
+    font-size: 28px;
 }
 
 #score-board > p {
     text-align: center;
     display: inline-block;
-    margin: 0px 15px;
+    margin: 0px 8px;
+}
+
+.hide {
+    display: none;
 }

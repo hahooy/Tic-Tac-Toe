@@ -1,7 +1,13 @@
 "use strict";
 (function game() {
+    /* block representation */
+    /* 0 1 2 
+       3 4 5
+       6 7 8 */
+
     var move = 0;
     var winflag = false;
+    var singleMode = false;
     var symbols = ["&times;", "o"];
     var scores = [0, 0, 0]; // [tie, player1, player2]
     var tie = 0;
@@ -9,23 +15,18 @@
     var player2 = 2; // player 2 is "O"
     var mySeed = 1; // used in minimax to identify my move
     var oppSeed = 2; // used in minimax to identify the opponent move
-    var SIZE = 9;
-    var singleMode = false;
+    var SIZE = 9;    
     var comp = player2; // decide which player is the AI
     var counter = 0; // performance counter, for analyze the algorithm
 
-    // all combination to win the game
-    var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
-		   [2,5,8], [0,4,8], [6,4,2]];
-
-    // block representation
-    /* 0 1 2 
-       3 4 5
-       6 7 8 */
     /* the states of the game board, 0 means the slot is empty,
        1 means player 1 has chose the slot and 2 means player 2 
        has chose the slot */
     var states = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    // all combination to win the game
+    var winComs = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7],
+		   [2,5,8], [0,4,8], [6,4,2]];
 
     /* map the index to the html div id */
     var blocks = ["#top-left", "#top", "#top-right", "#middle-left", "#middle",
@@ -248,11 +249,12 @@
 	       always chose the 0 slot to be the first move of the game.
 	       this reduces the posible moves we need to check dramatically.
 	    */
-	    nextmove = 0;
+	    var initialMove = [0, 2, 4, 6, 8];
+	    nextmove = initialMove[Math.floor(Math.floor(Math.random() * 5))];
 	} else {
 	    nextmove = minimax(player).move;
 	}
-	console.log(counter);
+	// console.log(counter);
 	states[nextmove] = player;
 	draw(nextmove, symbols[player - 1]);
 	move++;
@@ -280,6 +282,20 @@
 	}
     };
 
+    // restore all variables to their initial states
+    var restore = function() {
+	$("#player-option").removeClass("hide");
+	$("#turn-option").addClass("hide");
+
+	winflag = false;
+	scores = [0, 0, 0];
+	singleMode = false;
+	updateScore();
+	restart();
+
+	$("#iconModal").modal();	    
+    };
+
     // initialize the game board
     var init = function()
     {
@@ -291,17 +307,24 @@
 	    $(blocks[i]).on("click", {"index": i}, handler);
 	}
 
-	// even listners for modal buttons
+	// event listners for modal buttons
 	$("#one-player").on("click", function() {
 	    singleMode = true;
 	    $(this).parent().toggleClass("hide");
 	    $("#turn-option").toggleClass("hide");
+	});
+	$("#play-first").on("click", function() {
+	    /* set AI to be player 1, AI plays first */
+	    comp = player2;
 	});
 	$("#play-second").on("click", function() {
 	    /* set AI to be player 1, AI plays first */
 	    comp = player1;
 	    computerMove(comp);
 	});
+
+	// event listener for the restart button
+	$("#restart-game").on("click", restore);
     };
 
     init();

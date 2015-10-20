@@ -1,9 +1,10 @@
-body {
-
+#restart-game {
+    margin: 10px;
+    font-size: 30px;
 }
 
 #game-container {
-    margin: 100px auto;
+    margin: 50px auto;
     width: 450px;
 }
 

@@ -2,7 +2,7 @@ doctype html
 html
   head
     title Tic Tac Toe
-    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css')
+    link(rel='stylesheet', href='bootstrap-3.3.6-dist/css/bootstrap.min.css')
     link(rel='stylesheet', href='style.css')
   body
     // modal for choosing the symbol before the game start
@@ -28,27 +28,39 @@ html
         // /.modal-content
       // /.modal-dialog
     // /.modal
-    #button-container
-      button#restart-game.btn.btn-primary.btn-lg Restart
-    #game-container
-      #game-board
-        #top-left
-        #top
-        #top-right
-        #middle-left
-        #middle
-        #middle-right
-        #bottom-left
-        #bottom
-        #bottom-right
-      #game-footer
-        #score-board
-          p#player1-score
-          p#tie
-          p#player2-score
-    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js', type='text/javascript')
-    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js')
+    .row      
+      .col-md-6.col-md-offset-3
+        #game-container
+          #game-board
+            #top-left
+            #top
+            #top-right
+            #middle-left
+            #middle
+            #middle-right
+            #bottom-left
+            #bottom
+            #bottom-right
+          #game-footer
+            #score-board
+              p#player1-score
+              p#tie
+              p#player2-score
+    .row
+      .col-md-6.col-md-offset-3
+          .input-group
+            .input-group-btn
+              button#restart-game.btn.btn-default restart
+            input#msg-input.form-control(type='text')
+            .input-group-btn
+              button#send.btn.btn-primary send
+    .row
+      .col-md-6.col-md-offset-3
+        ul#messages
+
+    script(src='jquery/jquery-2.2.3.min.js', type='text/javascript')
+    script(src='bootstrap-3.3.6-dist/js/bootstrap.min.js')
+    script(src='/socket.io/socket.io.js')
     script(src='game.js', type='text/javascript')
     script.
       $("#iconModal").modal();
-

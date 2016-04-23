@@ -1,5 +1,10 @@
 "use strict";
+
+/* connect to socket.io */
+var socket = io();
+
 (function game() {
+
     /* block representation */
     /* 0 1 2 
        3 4 5
@@ -48,6 +53,9 @@
 	// player move, if the first move is AI, skip this
 	if (!singleMode || move !== 0 || comp !== player1) {
 	    playerMove(event.data.index);
+	    if (!singleMode) {
+		sendPlayerMove(event.data.index);
+	    }
 	    if (isOver()) {
 		winflag = true;
 	    }
@@ -296,6 +304,49 @@
 	$("#iconModal").modal();	    
     };
 
+    // send chat message to socket.io
+    function sendChatMessage() {
+	socket.emit('chat message', $('#msg-input').val());
+	$('#msg-input').val('');
+	return false;
+    }
+
+    // receive chat message from socket.io
+    function receiveChatMessage() {
+	socket.on('chat message', function(msg) {
+	    if (typeof(msg) === 'undefined' || msg === null || msg === '') {
+		return;
+	    }
+	    console.log(msg);
+	    let message = '<li>###</li>'.replace('###', msg);
+	    $('#messages').append(message);
+	});
+    }	
+
+    // send player move to socket.io
+    function sendPlayerMove(index) {
+	socket.emit('player move', index);
+    }
+
+    // receive player move from socket.io
+    function receivePlayerMove() {
+	socket.on('player move', function(index) {
+	    console.log(index);
+	    playerMove(index);
+	    if (isOver()) {
+		winflag = true;
+	    }
+	});
+    }
+
+    // receive player connection information
+    function receivePlayerConnect() {
+	socket.on('user connect', function(msg) {
+	    let message = '<li>###</li>'.replace('###', msg);
+	    $('#messages').append(message);
+	});
+    }
+
     // initialize the game board
     var init = function()
     {
@@ -325,6 +376,23 @@
 
 	// event listener for the restart button
 	$("#restart-game").on("click", restore);
+
+	// event listener for sending a chat message
+	$('#send').on('click', sendChatMessage);
+	$('#msg-input').keypress(function(e) {
+	    if (e.which == 13) {
+		sendChatMessage();
+	    }
+	});
+
+	// listen to other players' message
+	receiveChatMessage();
+
+	// listen to other players' connection info
+	receivePlayerConnect();
+
+	// listen to other players' move
+	receivePlayerMove();
     };
 
     init();

@@ -34,3 +34,21 @@
 .hide {
     display: none;
 }
+
+.sender-message {
+    background-color: #eee;
+    float: right;
+}
+
+.receiver-message {
+    background-color: #4090db;
+    color: #fff;
+}
+
+.message {
+    width: 40%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 35px;
+    clear: both;
+}

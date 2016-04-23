@@ -306,9 +306,12 @@ var socket = io();
 
     // send chat message to socket.io
     function sendChatMessage() {
-	socket.emit('chat message', $('#msg-input').val());
+	var msg = $('#msg-input').val();
+	socket.emit('chat message', msg);
 	$('#msg-input').val('');
-	return false;
+	var message = '<div class="sender-message message">###</div>'.replace('###', msg);
+	console.log(message);
+	$('#messages').append(message);
     }
 
     // receive chat message from socket.io
@@ -318,7 +321,7 @@ var socket = io();
 		return;
 	    }
 	    console.log(msg);
-	    var message = '<li>###</li>'.replace('###', msg);
+	    var message = '<div class="receiver-message message">###</div>'.replace('###', msg);
 	    $('#messages').append(message);
 	});
     }	
@@ -342,7 +345,7 @@ var socket = io();
     // receive player connection information
     function receivePlayerConnect() {
 	socket.on('user connect', function(msg) {
-	    var message = '<li>###</li>'.replace('###', msg);
+	    var message = '<div>###</div>'.replace('###', msg);
 	    $('#messages').append(message);
 	});
     }

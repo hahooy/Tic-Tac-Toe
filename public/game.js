@@ -318,7 +318,7 @@ var socket = io();
 		return;
 	    }
 	    console.log(msg);
-	    let message = '<li>###</li>'.replace('###', msg);
+	    var message = '<li>###</li>'.replace('###', msg);
 	    $('#messages').append(message);
 	});
     }	
@@ -342,7 +342,7 @@ var socket = io();
     // receive player connection information
     function receivePlayerConnect() {
 	socket.on('user connect', function(msg) {
-	    let message = '<li>###</li>'.replace('###', msg);
+	    var message = '<li>###</li>'.replace('###', msg);
 	    $('#messages').append(message);
 	});
     }

@@ -304,6 +304,8 @@ var socket = io();
 	$("#iconModal").modal();	    
     };
 
+    /********** START: socket.io events handlers ************/
+
     // send chat message to socket.io
     function sendChatMessage() {
 	var msg = $('#msg-input').val();
@@ -326,6 +328,14 @@ var socket = io();
 	});
     }	
 
+    // receive player connection information
+    function receivePlayerConnect() {
+	socket.on('user connect', function(msg) {
+	    var message = '<div>###</div>'.replace('###', msg);
+	    $('#messages').append(message);
+	});
+    }
+
     // send player move to socket.io
     function sendPlayerMove(index) {
 	socket.emit('player move', index);
@@ -341,45 +351,22 @@ var socket = io();
 	    }
 	});
     }
+    
+    // send player restart to socket.io
+    function sendPlayerRestart() {
+	socket.emit('player restart', 'restart');
+    }
 
-    // receive player connection information
-    function receivePlayerConnect() {
-	socket.on('user connect', function(msg) {
-	    var message = '<div>###</div>'.replace('###', msg);
-	    $('#messages').append(message);
+    // receive player restart from socket.io
+    function receivePlayerRestart() {
+	socket.on('player restart', function(_) {
+	    console.log('player restart');
+	    restore();
 	});
     }
 
-    // initialize the game board
-    var init = function()
-    {
-	// initialize the score board
-	updateScore(); 
-
-	// register the even listener for every slots of the board
-	for (var i = 0; i < blocks.length; i++) {
-	    $(blocks[i]).on("click", {"index": i}, handler);
-	}
-
-	// event listners for modal buttons
-	$("#one-player").on("click", function() {
-	    singleMode = true;
-	    $(this).parent().toggleClass("hide");
-	    $("#turn-option").toggleClass("hide");
-	});
-	$("#play-first").on("click", function() {
-	    /* set AI to be player 1, AI plays first */
-	    comp = player2;
-	});
-	$("#play-second").on("click", function() {
-	    /* set AI to be player 1, AI plays first */
-	    comp = player1;
-	    computerMove(comp);
-	});
-
-	// event listener for the restart button
-	$("#restart-game").on("click", restore);
-
+    // register listeners for socket.io event, this function should not be called in single player mode
+    function registerSocketioListener() {
 	// event listener for sending a chat message
 	$('#send').on('click', sendChatMessage);
 	$('#msg-input').keypress(function(e) {
@@ -396,6 +383,52 @@ var socket = io();
 
 	// listen to other players' move
 	receivePlayerMove();
+
+	// listen to other players restarting
+	receivePlayerRestart();
+
+    }
+
+
+    /********** END: socket.io events handlers ************/
+
+    // initialize the game board
+    var init = function()
+    {
+	// initialize the score board
+	updateScore(); 
+
+	// register the even listener for every slots of the board
+	for (var i = 0; i < blocks.length; i++) {
+	    $(blocks[i]).on("click", {"index": i}, handler);
+	}
+
+	// event listners for modal buttons
+	$("#one-player").on("click", function() {
+	    singleMode = true;
+	    $(this).parent().toggleClass("hide");
+	    $("#turn-option").toggleClass("hide");	
+	});
+	$('#two-player').on("click", function() {
+	    registerSocketioListener();
+	});
+	$("#play-first").on("click", function() {
+	    /* set AI to be player 1, AI plays first */
+	    comp = player2;
+	});
+	$("#play-second").on("click", function() {
+	    /* set AI to be player 1, AI plays first */
+	    comp = player1;
+	    computerMove(comp);
+	});
+
+	// event listener for the restart button
+	$("#restart-game").on("click", function() {
+	    if (!singleMode) {
+		sendPlayerRestart();
+	    }
+	    restore();
+	});
     };
 
     init();

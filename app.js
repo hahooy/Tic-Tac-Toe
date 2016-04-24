@@ -28,6 +28,11 @@ io.on('connection', function(socket) {
 	socket.broadcast.emit('player move', index);
     });
 
+    // broadcast player restarting the game
+    socket.on('player restart', function(_) {
+	socket.broadcast.emit('player restart', _);
+    });
+
     // broadcast the disconnect
     socket.on('disconnect', function(_) {
 	socket.broadcast.emit('user connect', 'a user left');

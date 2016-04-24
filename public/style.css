@@ -1,11 +1,11 @@
 #game-container {
-    margin: 50px auto;
-    width: 450px;
+    margin: 10px auto;
+    width: 550px;
 }
 
 #game-board {
-    width: 450px;
-    height: 450px;
+    width: 550px;
+    height: 550px;
 }
 
 #game-board > div {
@@ -22,7 +22,8 @@
 #game-footer {
     height: 50px;
     background-color: rgb(255,255,255);
-    font-size: 28px;
+    text-align: center;
+    font-size: 20px;
 }
 
 #score-board > p {

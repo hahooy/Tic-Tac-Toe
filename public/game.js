@@ -344,8 +344,13 @@ var socket = io();
     // receive player move from socket.io
     function receivePlayerMove() {
 	socket.on('player move', function(index) {
-	    console.log(index);
+	    if (winflag) {
+		restart();
+		winflag = false;
+	    }
+
 	    playerMove(index);
+
 	    if (isOver()) {
 		winflag = true;
 	    }

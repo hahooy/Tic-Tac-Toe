@@ -1,11 +1,11 @@
 #game-container {
     margin: 10px auto;
-    width: 550px;
+    width: 500px;
 }
 
 #game-board {
-    width: 550px;
-    height: 550px;
+    width: 500px;
+    height: 500px;
 }
 
 #game-board > div {

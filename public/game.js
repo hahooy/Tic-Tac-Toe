@@ -297,11 +297,11 @@ var socket = io();
 
 	winflag = false;
 	scores = [0, 0, 0];
-	singleMode = false;
+	//singleMode = false;
 	updateScore();
 	restart();
 
-	$("#iconModal").modal();	    
+	//$("#iconModal").modal();	    
     };
 
     /********** START: socket.io events handlers ************/
